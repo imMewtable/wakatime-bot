@@ -1,5 +1,6 @@
 import discord
 import os
+import api
 from dotenv import load_dotenv
 from discord.ext import commands
 
@@ -20,9 +21,11 @@ class WakaBot(discord.Client):
     bot = commands.bot(command_prefix='!')
 
     # Command to associate a WakaTime username with a Discord account
-    @bot.command(name='waka-register')
+    @bot.command(name='register')
     async def waka_register(ctx, name):
-        pass
+        # method call to auth
+        await ctx.message.reply("I sent you a DM to continue the registration process!")
+        
 
     # Command to print the top 5 users of all time
     @bot.command(name='alltime')
