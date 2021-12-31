@@ -33,4 +33,4 @@ def get_discord_user_data(discord_user):
 
 
 #init_tables()
-print(get_discord_user_data('jkc_boi#4751'))
+#print(get_discord_user_data('jkc_boi#4751'))
