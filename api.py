@@ -1,12 +1,12 @@
 import requests
 import datetime
 
-URL = r'https://wakatime.com/api/v1/users/{0}/stats/'
+#URL = r'https://wakatime.com/api/v1/users/{0}/stats/'
 
-r = requests.get(URL.format('jkcarney'))
-code = r.status_code
-print(code)
-print(r.json()['data']['human_readable_total'])
+#r = requests.get(URL.format('jkcarney'))
+#code = r.status_code
+#print(code)
+#print(r.json()['data']['human_readable_total'])
 
 
 def does_wakatime_user_exist(user):

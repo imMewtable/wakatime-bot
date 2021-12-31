@@ -6,6 +6,17 @@ from dotenv import load_dotenv
 import DbModel
 
 
+# Checks if discord user is already authorized (meaning they already in the db with token)
+def is_discord_user_authorized(discord_username, server_id):
+    data = DbModel.get_discord_user_data(discord_username, server_id)
+
+    # If theres an entry and the auth_token field is not none, then they're authorized
+    if data is not None and data.auth_token is not None:
+        return True
+    else:
+        return False
+
+
 class Authorizer:
     def __init__(self):
         load_dotenv('secrets.env')
@@ -22,15 +33,6 @@ class Authorizer:
             access_token_url='https://wakatime.com/oauth/token',
             base_url='https://wakatime.com/api/v1/')
 
-    # Checks if discord user is already authorized (meaning they already in the db)
-    def is_discord_user_authorized(self, discord_username):
-        data = DbModel.get_discord_user_data()
-
-        if data is None:
-            return False
-        else:
-            return True
-
     # Private messages user the link for the authorization token
     def get_user_authorization_url(self):
         state = hashlib.sha1(os.urandom(40)).hexdigest()
@@ -43,7 +45,7 @@ class Authorizer:
         return url
 
     # Attempts to verify authorization token passed into function from discord_username
-    def authorize_token(self, token, discord_username):
+    def authorize_token(self, token, discord_username, server_id):
         headers = {'Accept': 'application/x-www-form-urlencoded'}
         session = self.service.get_auth_session(headers=headers,
                                                 data={'code': token,
@@ -55,9 +57,10 @@ class Authorizer:
             user_data = response.json()['data']
             username = user_data['username']
 
-            if DbModel.add_user_data(discord_username, username, token) == 1:
+            if DbModel.update_user_data(discord_username, username, token) == 1:
                 return True
             else:
                 return False
 
-#sec_ET5gkYtCmXrwAUamJhVcN2ymAbJSaYhGUg7CHFe1b7gYFIvDDESMjoPoTFHWX16kNI7FYXuDZD1MOrf6
+        else:
+            return False

@@ -3,18 +3,31 @@ import os
 import api
 from dotenv import load_dotenv
 from discord.ext import commands
+import DbModel
+from DbModel import WakaData
+import auth
 
 
 class WakaBot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix='!')
+        self.authenticator = auth.Authorizer()
 
         # Command to register user
         @self.command(name='register')
         async def waka_register(ctx):
-            # method call to auth
-            await ctx.message.author.send('Test message')
-            await ctx.message.reply("I sent you a DM to continue the registration process!")
+            server_id = ctx.guild.id
+            cmd_author = ctx.message.author
+            # initialize_user_data returns the record that was successfully created
+            # If it didn't work, it returns None. So if it's not None, it worked.
+            if DbModel.initialize_user_data(str(cmd_author), server_id):
+                url = self.authenticator.get_user_authorization_url()
+                await cmd_author.send("Please visit {} and authorize Wakabot to use your API data. Once you've done "
+                                      "that, wakatime should give you a token. Come back here and paste the token in "
+                                      "order to finish the authentication process.".format(url))
+                await ctx.message.reply("I sent you a DM to continue the registration process!")
+            else:
+                await cmd_author.send('You either already requested to be initialized or you are already authenticated')
 
         # Command to print the top 5 users of all time
         @self.command(name='alltime')
@@ -39,11 +52,35 @@ class WakaBot(commands.Bot):
     async def on_ready(self):
         print('We have logged in as {0.user}'.format(client))
 
+    # On message for DMs
+    async def on_message(self, message):
+        if message.author == client.user:
+            return
+        # Basically checking if its a DM by seeing if the message has a guild
+        await client.process_commands(message)
+        if not message.guild:
+            msg_author = str(message.author)
+            token = str(message.content)
+            data = WakaData.select().where(WakaData.discord_username == msg_author and WakaData.auth_token >> None).get()
+            # If the user is in the DB and the auth token hasn't been initialized
+            if data:
+                server = data.server_id
+                # Authenticates token
+                if self.authenticator.authorize_token(token, msg_author, server):
+                    await message.reply('Successfully authenticated! Have a good day :)')
+                else:
+                    await message.reply('Failed to authenticate token. Was there a typo in the token?')
+            else:
+                await message.reply('Your information was not found in the database. Please use !register first to '
+                                    'initiate the authentication.')
+
+
 
 # Load secrets file and get token
 load_dotenv('secrets.env')
 API_TOKEN = os.getenv('DISCORD_TOKEN')
 
-client = WakaBot()
+DbModel.init_tables()
 
+client = WakaBot()
 client.run(API_TOKEN)
