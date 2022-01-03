@@ -61,6 +61,17 @@ def get_user_token(discord_user, server_id):
         return None
 
 
+# Gets all discord users who are currently authenticated
+def get_authenticated_discord_users(server_id):
+    try:
+        data = WakaData.select(WakaData.discord_username).where((WakaData.server_id == server_id) &  # ServerID is equal
+                                                               (~WakaData.auth_token >> None))  # auth_token is not None
+        return data
+    except Exception as e:
+        print(e)
+        return None
+
+
 def __debug_log_all_data__():
     rows = WakaData.select()
     for row in rows:
@@ -68,3 +79,7 @@ def __debug_log_all_data__():
 
 # init_tables()
 # __debug_log_all_data__()
+
+users = get_authenticated_discord_users(892121935658504232)
+for user in users:
+    print(user.discord_username)
