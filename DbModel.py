@@ -79,7 +79,3 @@ def __debug_log_all_data__():
 
 # init_tables()
 # __debug_log_all_data__()
-
-users = get_authenticated_discord_users(892121935658504232)
-for user in users:
-    print(user.discord_username)
