@@ -1,6 +1,5 @@
 import discord
 import os
-import api
 from dotenv import load_dotenv
 from discord.ext import commands
 import DbModel
@@ -73,7 +72,6 @@ class WakaBot(commands.Bot):
             else:
                 await message.reply('Your information was not found in the database. Please use !register first to '
                                     'initiate the authentication.')
-
 
 
 # Load secrets file and get token
