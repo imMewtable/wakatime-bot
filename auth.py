@@ -1,8 +1,13 @@
 import hashlib
 import os
 import sys
+
+import requests
 from rauth import OAuth2Service
+from rauth import session
+from rauth import *
 from dotenv import load_dotenv
+from urllib.parse import parse_qsl
 import DbModel
 
 
@@ -64,3 +69,21 @@ class Authorizer:
 
         else:
             return False
+
+    # Authenticates and gets the discord users in server id's data.
+    # Returns as json if found, returns None if not found or authentication failed
+    def get_wakatime_user_json(self, discord_username, server_id):
+        user_data = DbModel.get_discord_user_data(discord_username, server_id)
+        if user_data is not None:
+            URL = r'https://wakatime.com/api/v1/users/{0}/stats?api_key={1}'.format(user_data.wakatime_username,
+                                                                                    user_data.auth_token)
+            response = requests.get(URL)
+            code = response.status_code
+
+            if code == 200:
+                return response.json()['data']
+            else:
+                return None
+        else:
+            return None
+

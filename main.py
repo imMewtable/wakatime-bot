@@ -61,7 +61,7 @@ class WakaBot(commands.Bot):
         if not message.guild:
             msg_author = str(message.author)
             token = str(message.content)
-            data = WakaData.select().where(WakaData.discord_username == msg_author and WakaData.auth_token >> None).get()
+            data = WakaData.select().where((WakaData.discord_username == msg_author) & (WakaData.auth_token >> None)).get()
             # If the user is in the DB and the auth token hasn't been initialized
             if data:
                 server = data.server_id
