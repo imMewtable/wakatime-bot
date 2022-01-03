@@ -64,11 +64,8 @@ class Authorizer:
 
             if DbModel.update_user_data(discord_username, username, token) == 1:
                 return True
-            else:
-                return False
 
-        else:
-            return False
+        return False
 
     # Authenticates and gets the discord users in server id's data.
     # Returns as json if found, returns None if not found or authentication failed
@@ -82,8 +79,6 @@ class Authorizer:
 
             if code == 200:
                 return response.json()['data']
-            else:
-                return None
-        else:
-            return None
+
+        return None
 
