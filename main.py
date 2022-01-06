@@ -55,8 +55,12 @@ class WakaBot(commands.Bot):
     async def on_message(self, message):
         if message.author == client.user:
             return
-        # Basically checking if its a DM by seeing if the message has a guild
+
+        # on_message event fires for guild messages and DMs. So if we get an on_message we still need to process it
+        # as a potential command (aka, inherited process_commands function)
         await client.process_commands(message)
+
+        # Basically checking if its a DM by seeing if the message has a guild
         if not message.guild:
             msg_author = str(message.author)
             token = str(message.content)
