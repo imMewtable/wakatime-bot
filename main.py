@@ -21,9 +21,10 @@ class WakaBot(commands.Bot):
             # If it didn't work, it returns None. So if it's not None, it worked.
             if DbModel.initialize_user_data(str(cmd_author), server_id):
                 url = self.authenticator.get_user_authorization_url()
-                await cmd_author.send("Please visit {} and authorize Wakabot to use your API data. Once you've done "
-                                      "that, wakatime should give you a token. Come back here and paste the token in "
-                                      "order to finish the authentication process.".format(url))
+                await cmd_author.send("Please visit {} and authorize Wakabot to use your API data.\n\nOnce you've "
+                                      "done that, the wakatime website should give you a token.\n\nCopy that token, "
+                                      "come back here, paste it into the chat and private message me the token in "
+                                      "order to finish the authentication process.".format(url)) 
                 await ctx.message.reply("I sent you a DM to continue the registration process!")
             else:
                 await cmd_author.send('You either already requested to be initialized or you are already authenticated')
