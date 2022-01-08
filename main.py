@@ -21,9 +21,10 @@ class WakaBot(commands.Bot):
             # If it didn't work, it returns None. So if it's not None, it worked.
             if DbModel.initialize_user_data(str(cmd_author), server_id):
                 url = self.authenticator.get_user_authorization_url()
-                await cmd_author.send("Please visit {} and authorize Wakabot to use your API data. Once you've done "
-                                      "that, wakatime should give you a token. Come back here and paste the token in "
-                                      "order to finish the authentication process.".format(url))
+                await cmd_author.send("Please visit {} and authorize Wakabot to use your API data.\n\nOnce you've "
+                                      "done that, the wakatime website should give you a token.\n\nCopy that token, "
+                                      "come back here, paste it into the chat and private message me the token in "
+                                      "order to finish the authentication process.".format(url)) 
                 await ctx.message.reply("I sent you a DM to continue the registration process!")
             else:
                 await cmd_author.send('You either already requested to be initialized or you are already authenticated')
@@ -55,8 +56,12 @@ class WakaBot(commands.Bot):
     async def on_message(self, message):
         if message.author == client.user:
             return
-        # Basically checking if its a DM by seeing if the message has a guild
+
+        # on_message event fires for guild messages and DMs. So if we get an on_message we still need to process it
+        # as a potential command (aka, inherited process_commands function)
         await client.process_commands(message)
+
+        # Basically checking if its a DM by seeing if the message has a guild
         if not message.guild:
             msg_author = str(message.author)
             token = str(message.content)
