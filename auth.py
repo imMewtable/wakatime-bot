@@ -93,8 +93,8 @@ class Authorizer:
 
     # Authenticates and gets the discord users in server id's data.
     # Returns as json if found, returns None if not found or authentication failed
-    # Time range is optional and must either be nothing, 'last_7_days', 'last_30_days', 'last_6_months', or 'last_year'
-    def get_wakatime_user_json(self, discord_username, server_id, time_range=None):
+    # Time range is REQUIRED and must either be nothing, 'last_7_days', 'last_30_days', 'last_6_months', or 'last_year'
+    def get_wakatime_user_json(self, discord_username, server_id, time_range):
         old_refresh_token = DbModel.get_user_refresh_token(discord_username, server_id)
 
         # Refresh token prior to accessing API so its always up to date
@@ -105,10 +105,9 @@ class Authorizer:
         headers = {'Accept': 'application/x-www-form-urlencoded',
                    'Authorization': 'Bearer {}'.format(access_token)}
 
-        # Optional time range argument.
-        url_args = 'users/current/stats/'
-        if time_range is not None:
-            url_args + time_range
+        # RANGE PARAMETER IS REQUIRED
+        url_args = 'users/current/summaries?range='
+        url_args = url_args + time_range
 
         # Use get request using authorization header
         response = requests.get(self.base_url + url_args, headers=headers)

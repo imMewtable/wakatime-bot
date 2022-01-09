@@ -5,6 +5,8 @@ from discord.ext import commands
 import DbModel
 from DbModel import WakaData
 import auth
+import constant
+import json
 
 
 class WakaBot(commands.Bot):
@@ -42,10 +44,21 @@ class WakaBot(commands.Bot):
         # I want two methods for stats: One with no parameter
         # that gives stats for the user who made the command,
         # and one with a parameter which is the user's stats
-        # to be printed
+        # to be printed. no clue how to differentiate...
+
+        # second arg (assuming usernam was put 1st) can be the range
+        # ill have to make if statement for that to check if the first arg is only range
         @self.command(name='stats')
-        async def waka_stats(ctx):
-            pass
+        async def waka_stats(ctx, arg):
+            # check if args or not. No args = use message author
+            # ASSUMING ARG LIST CAN BE EMPTY LMAO
+            if arg:
+                f = open(auth.get_wakatime_user_json(self, arg[0], ctx.guild, constant.WEEK))
+                data = json.load(f)
+            else:
+                f = open (auth.get_wakatime_user_json(self, ctx.author, ctx.guild, constant.WEEK))
+                data = json.load(f)
+
 
     # Overridden method
     # Called when bot successfully logs onto server
