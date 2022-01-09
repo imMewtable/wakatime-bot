@@ -55,7 +55,7 @@ class WakaBot(commands.Bot):
             stats = self.authenticator.get_wakatime_user_json(ctx.author, ctx.guild.id, constant.WEEK)
 
             time = stats['cummulative_total']['text']
-            lang = data_parser.mostUsedLanguage(stats)
+            lang = data_parser.most_used_language(stats)
 
             # print results
             if time == "0 secs":

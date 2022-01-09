@@ -1,4 +1,4 @@
-def mostUsedLanguage(stats):
+def most_used_language(stats):
     """
     Returns a user's most used programming language
     """
