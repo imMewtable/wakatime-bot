@@ -1,3 +1,5 @@
+TODAY = 'today'
+YESTERDAY = 'yesterday'
 WEEK = 'last_7_days'
 MONTH = 'last_30_days'
 SIX_MONTH = 'last_6_months'

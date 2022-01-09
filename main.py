@@ -7,6 +7,7 @@ from DbModel import WakaData
 import auth
 import constant
 import json
+import data_parser
 
 
 class WakaBot(commands.Bot):
@@ -49,16 +50,18 @@ class WakaBot(commands.Bot):
         # second arg (assuming usernam was put 1st) can be the range
         # ill have to make if statement for that to check if the first arg is only range
         @self.command(name='stats')
-        async def waka_stats(ctx, arg):
-            # check if args or not. No args = use message author
-            # ASSUMING ARG LIST CAN BE EMPTY LMAO
-            if arg:
-                f = open(auth.get_wakatime_user_json(self, arg[0], ctx.guild, constant.WEEK))
-                data = json.load(f)
-            else:
-                f = open (auth.get_wakatime_user_json(self, ctx.author, ctx.guild, constant.WEEK))
-                data = json.load(f)
+        async def waka_stats(ctx):
+    
+            stats = self.authenticator.get_wakatime_user_json(ctx.author, ctx.guild.id, constant.WEEK)
 
+            time = stats['cummulative_total']['text']
+            lang = data_parser.mostUsedLanguage(stats)
+
+            # print results
+            if time == "0 secs":
+                 await ctx.message.reply("Sorry, you don't have any data logged yet! Spend some time coding and try again.")
+            else:
+                await ctx.message.reply("Time: {0} \nMost used language: {1}".format(time, lang))
 
     # Overridden method
     # Called when bot successfully logs onto server

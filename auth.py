@@ -106,7 +106,7 @@ class Authorizer:
                    'Authorization': 'Bearer {}'.format(access_token)}
 
         # Need different URL for all-time stats
-        if time_range is 'all_time_since_today':
+        if time_range == 'all_time_since_today':
             url_args = 'users/current/all_time_since_today'
         else:
             url_args = 'users/current/summaries?range='
@@ -115,6 +115,6 @@ class Authorizer:
         # Use get request using authorization header
         response = requests.get(self.base_url + url_args, headers=headers)
         if response.status_code == 200:
-            return response.json()['data']
+            return response.json()
 
         return None
