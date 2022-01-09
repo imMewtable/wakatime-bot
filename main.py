@@ -42,16 +42,11 @@ class WakaBot(commands.Bot):
         async def waka_leaderboard_weekly(ctx):
             pass
 
-        # I want two methods for stats: One with no parameter
-        # that gives stats for the user who made the command,
-        # and one with a parameter which is the user's stats
-        # to be printed. no clue how to differentiate...
-
-        # second arg (assuming usernam was put 1st) can be the range
-        # ill have to make if statement for that to check if the first arg is only range
-        @self.command(name='stats')
-        async def waka_stats(ctx):
-    
+        @self.command(name='weekly')
+        async def self_weekly(ctx):
+            """
+            Prints out the stats of the user that sends the command (no args)
+            """
             stats = self.authenticator.get_wakatime_user_json(ctx.author, ctx.guild.id, constant.WEEK)
 
             time = stats['cummulative_total']['text']
