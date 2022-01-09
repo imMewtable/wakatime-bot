@@ -32,18 +32,14 @@ class WakaBot(commands.Bot):
             else:
                 await cmd_author.send('You either already requested to be initialized or you are already authenticated')
 
-        # Command to print the top 5 users of all time
-        @self.command(name='alltime')
-        async def waka_leaderboard_alltime(ctx):
+
+        # HANDLES ALL LEADERBOARDS ARGS
+        @self.command(name='top')
+        async def leaderboard(ctx):
             pass
 
-        # Command to print the top 5 users of the week
-        @self.command(name='weekly')
-        async def waka_leaderboard_weekly(ctx):
-            pass
-
-        @self.command(name='weekly')
-        async def self_weekly(ctx):
+        @self.command(name='stats')
+        async def self_stats(ctx):
             """
             Prints out the stats of the user that sends the command (no args)
             """
