@@ -105,9 +105,12 @@ class Authorizer:
         headers = {'Accept': 'application/x-www-form-urlencoded',
                    'Authorization': 'Bearer {}'.format(access_token)}
 
-        # RANGE PARAMETER IS REQUIRED
-        url_args = 'users/current/summaries?range='
-        url_args = url_args + time_range
+        # Need different URL for all-time stats
+        if time_range is 'all_time_since_today':
+            url_args = 'users/current/all_time_since_today'
+        else:
+            url_args = 'users/current/summaries?range='
+            url_args = url_args + time_range
 
         # Use get request using authorization header
         response = requests.get(self.base_url + url_args, headers=headers)
