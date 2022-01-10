@@ -39,17 +39,46 @@ class WakaBot(commands.Bot):
             pass
 
         @self.command(name='stats')
-        async def self_stats(ctx):
+        async def stats(ctx, arg):
             """
-            Prints out the stats of the user that sends the command (no args)
+            Prints out the stats of the user that sends the command
+            arg[0]: range (week, month, year, alltime)
+            arg[1]: username (OPTIONAL)
             """
-            stats = self.authenticator.get_wakatime_user_json(ctx.author, ctx.guild.id, constant.WEEK)
 
-            time = stats['cummulative_total']['text']
-            lang = data_parser.most_used_language(stats)
+            # Time range of stats to be printed
+            if arg[0] == 'week' or 'weekly':
+                range = constant.WEEK
+            elif arg[0] == 'month' or 'monthly':
+                range = constant.MONTH
+            elif arg[0] == 'year' or 'yearly':
+                range = constant.YEAR
+            elif arg[0] == 'alltime':
+                range = constant.ALL_TIME
+            else:
+                print("{0} is not an acceptable time range".format(arg[0]))
+                await ctx.message.reply("Sorry, I dont recognize {0} as a valid time range. Try \"week\", \"month\", \"year\", or \"alltime\"!".format(arg[0]))
 
-            # print results
+            # Which user's stats to be printed
+            if arg[1]:
+                user = arg[1]
+            else:
+                user = ctx.author
+
+            stats = self.authenticator.get_wakatime_user_json(user, ctx.guild.id, range)
+
+            # Top language is not included in alltime stats. Different json formats too
+            if range == constant.ALL_TIME:
+                start = stats['range'] # I STOPPED HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+                time = stats['data']['text']
+                lang = 'None'
+            else:
+                time = stats['cummulative_total']['text']
+                lang = data_parser.most_used_language(stats)
+
+            # Print results
             if time == "0 secs":
+                # Should specify the time range? Not sure.
                  await ctx.message.reply("Sorry, you don't have any data logged yet! Spend some time coding and try again.")
             else:
                 await ctx.message.reply("Time: {0} \nMost used language: {1}".format(time, lang))
