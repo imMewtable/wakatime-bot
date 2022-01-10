@@ -5,8 +5,6 @@ from peewee import *
 from playhouse.mysql_ext import MySQLDatabase
 
 load_dotenv('secrets.env')
-API_TOKEN = os.getenv('DISCORD_TOKEN')
-
 HOST = os.getenv('MYSQL_HOST')
 MYSQL_USERNAME = os.getenv('MYSQL_USER')
 MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD')
