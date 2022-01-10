@@ -150,10 +150,4 @@ def __debug_log_all_data__():
     db.close()
 
 #init_tables()
-# __debug_log_all_data__()
-
-print('Attempting to connect to MySQL database...')
-did_connect = db.connect()
-print(str(did_connect) + ' - If this is TRUE, then the connection succeeded.')
-print('Closing DB connection')
-db.close()
+#__debug_log_all_data__()
