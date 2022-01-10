@@ -22,12 +22,17 @@ class WakaBot(commands.Bot):
             cmd_author = ctx.message.author
             # initialize_user_data returns the record that was successfully created
             # If it didn't work, it returns None. So if it's not None, it worked.
-            if DbModel.initialize_user_data(str(cmd_author), server_id):
+            # OR, we check if the user is initialized in the database but NOT authenticated (meaning auth_token is None)
+            if DbModel.initialize_user_data(str(cmd_author), server_id) or DbModel.is_user_initialized_not_authenticated(str(cmd_author), server_id):
                 url = self.authenticator.get_user_authorization_url()
-                await cmd_author.send("Please visit {} and authorize Wakabot to use your API data.\n\nOnce you've "
-                                      "done that, the wakatime website should give you a token.\n\nCopy that token, "
-                                      "come back here, paste it into the chat and private message me the token in "
-                                      "order to finish the authentication process.".format(url)) 
+                await cmd_author.send("HERE ARE THE STEPS TO AUTHORIZE YOURSELF WITH THE WAKABOT:\n\n1). Visit the "
+                                      "URL at the bottom of this message.\n\n2). Allow Wakabot to be able to read "
+                                      "your user data\n\n**3.) Once you have authorized, Wakatime should give you an "
+                                      "initial access token (It will look like sec_###...). Copy that token as is, "
+                                      "paste it into THIS private "
+                                      "message, and send it to me.**\n\n4.) Once that is done, I should inform you "
+                                      "that you have successfully authenticated. You are ready to use Wakabot "
+                                      "commands on the server you have registered in.\n\n||{}||".format(url))
                 await ctx.message.reply("I sent you a DM to continue the registration process!")
             else:
                 await cmd_author.send('You either already requested to be initialized or you are already authenticated')
@@ -38,9 +43,9 @@ class WakaBot(commands.Bot):
             pass
 
         # Command to print the top 5 users of the week
-        @self.command(name='weekly')
-        async def waka_leaderboard_weekly(ctx):
-            pass
+        #@self.command(name='weekly')
+        #async def waka_leaderboard_weekly(ctx):
+        #    pass
 
         @self.command(name='weekly')
         async def self_weekly(ctx):
@@ -74,20 +79,22 @@ class WakaBot(commands.Bot):
 
         # Basically checking if its a DM by seeing if the message has a guild
         if not message.guild:
+            await message.reply('I have received your token. Please give me a moment while I authenticate you...')
             msg_author = str(message.author)
             token = str(message.content)
-            data = WakaData.select().where((WakaData.discord_username == msg_author) & (WakaData.auth_token >> None)).get()
+            data = DbModel.get_user_with_no_access_token(msg_author)
             # If the user is in the DB and the auth token hasn't been initialized
             if data:
                 server = data.server_id
                 # Authenticates token
                 if self.authenticator.authorize_token(token, msg_author, server):
-                    await message.reply('Successfully authenticated! Have a good day :)')
+                    await message.reply('Successfully authenticated! You are now ready to use Wakabot commands on the '
+                                        'server you registered in. Have a good day :)')
                 else:
                     await message.reply('Failed to authenticate token. Was there a typo in the token?')
             else:
                 await message.reply('Your information was not found in the database. Please use !register first to '
-                                    'initiate the authentication.')
+                                    'initiate the authentication. Or you were already authenticated ;)')
 
 
 # Load secrets file and get token
@@ -98,3 +105,4 @@ DbModel.init_tables()
 
 client = WakaBot()
 client.run(API_TOKEN)
+DbModel.db.close()

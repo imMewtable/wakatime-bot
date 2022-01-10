@@ -27,10 +27,10 @@ class BaseModel(Model):
 
 
 class WakaData(BaseModel):
-    discord_username = UUIDField(null=False)
-    wakatime_username = TextField(null=True)
-    auth_token = TextField(null=True)
-    refresh_token = TextField(null=True)
+    discord_username = CharField(null=False, max_length=40)
+    wakatime_username = CharField(null=True, max_length=40)
+    auth_token = CharField(null=True, max_length=100)
+    refresh_token = CharField(null=True, max_length=100)
     server_id = IntegerField(null=False)
 
 
@@ -51,6 +51,7 @@ def initialize_user_data(discord_user, serverid):
         return code
     except Exception as e:
         print(e)
+        db.close()
         return None
 
 
@@ -93,7 +94,14 @@ def get_discord_user_data(discord_user, serverid):
         return user
     except Exception as e:
         print(e)
+        db.close()
         return None
+
+
+# Checks to see if a user has been initialized in the DB but not fully authenticated.
+# This probably happens if the user forgot to paste in the auth token from wakatime OR didn't click the link in time
+def is_user_initialized_not_authenticated(discord_username, server_id):
+    return get_user_access_token(discord_username, server_id) is None
 
 
 # Get's the discord user in server ID's access token
@@ -108,6 +116,7 @@ def get_user_access_token(discord_user, server_id):
         return access_token
     except Exception as e:
         print(e)
+        db.close()
         return None
 
 
@@ -124,6 +133,7 @@ def get_user_refresh_token(discord_username, server_id):
         return refresh_token
     except Exception as e:
         print(e)
+        db.close()
         return None
 
 
@@ -137,6 +147,7 @@ def get_authenticated_discord_users(server_id):
         return data
     except Exception as e:
         print(e)
+        db.close()
         return None
 
 
@@ -148,6 +159,13 @@ def __debug_log_all_data__():
         print("[{}, {}, {}, {}]".format(row.discord_username, row.wakatime_username, row.auth_token, row.server_id))
 
     db.close()
+
+
+def get_user_with_no_access_token(discord_username):
+    db.connect()
+    data = WakaData.select().where((WakaData.discord_username == discord_username) & (WakaData.auth_token >> None)).get()
+    db.close()
+    return data
 
 #init_tables()
 #__debug_log_all_data__()
