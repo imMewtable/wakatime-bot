@@ -37,7 +37,7 @@ class WakaData(MySQLBaseModel):
 
 mysql_db.connect()
 
-conn = sqlite3.connect('users.db')
+conn = sqlite3.connect('../users.db')
 c = conn.cursor()
 
 c.execute("SELECT * FROM wakadata")
