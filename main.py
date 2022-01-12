@@ -12,7 +12,7 @@ import data_parser
 
 class WakaBot(commands.Bot):
     def __init__(self):
-        super().__init__(command_prefix='!')
+        super().__init__(command_prefix='!', intents=intents)
         self.authenticator = auth.Authorizer()
 
         # Command to register user
@@ -37,39 +37,37 @@ class WakaBot(commands.Bot):
         @self.command(name='top')
         async def leaderboard(ctx):
             pass
-
+        
+        # HANDLES ALL INDIVIDUAL STAT ARGS
         @self.command(name='stats')
-        async def stats(ctx, arg):
+        async def stats(ctx, r, user: discord.Member):
             """
             Prints out the stats of the user that sends the command
-            arg[0]: range (week, month, year, alltime)
-            arg[1]: username (OPTIONAL)
+            args[0]: range (week, month, year, alltime)
+            args[1]: username (OPTIONAL)
             """
-
             # Time range of stats to be printed
-            if arg[0] == 'week' or 'weekly':
-                range = constant.WEEK
-            elif arg[0] == 'month' or 'monthly':
+            if r == 'week' or r =='weekly': # there is no keyword to get the actual current week
+                range = constant.WEEK                   # i will have to make a method in future to calc the most recent
+                r = "week"                              # sunday and then i will put a custome range here. last 7 from today
+                                                        # is stinky and no good 
+            elif r == 'month' or r == 'monthly':
                 range = constant.MONTH
-            elif arg[0] == 'year' or 'yearly':
-                range = constant.YEAR
-            elif arg[0] == 'alltime':
+                r = "month"
+            elif r == 'alltime':
                 range = constant.ALL_TIME
             else:
-                print("{0} is not an acceptable time range".format(arg[0]))
-                await ctx.message.reply("Sorry, I dont recognize {0} as a valid time range. Try \"week\", \"month\", \"year\", or \"alltime\"!".format(arg[0]))
+                print("{0} is not an acceptable time range, command failed.".format(r))
+                await ctx.message.reply("Sorry, I dont recognize **{0}** as a valid time range. Try `week`, `month`, or `alltime`!".format(r))
+                return
 
-            # Which user's stats to be printed
-            if arg[1]:
-                user = arg[1]
-            else:
-                user = ctx.author
 
             stats = self.authenticator.get_wakatime_user_json(user, ctx.guild.id, range)
-
+            
             # Top language is not included in alltime stats. Different json formats too
             if range == constant.ALL_TIME:
-                start = stats['range'] # I STOPPED HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+                start = stats['data']['range']['start_text']
+                start = start[4:] # Cut off the weekday, I dont like it there
                 time = stats['data']['text']
                 lang = 'None'
             else:
@@ -80,8 +78,10 @@ class WakaBot(commands.Bot):
             if time == "0 secs":
                 # Should specify the time range? Not sure.
                  await ctx.message.reply("Sorry, you don't have any data logged yet! Spend some time coding and try again.")
+            elif lang == "None":
+                await ctx.message.reply("**{0}** has coded for **{1}** since **{2}**".format(user.nick, time, start))
             else:
-                await ctx.message.reply("Time: {0} \nMost used language: {1}".format(time, lang))
+                await ctx.message.reply("**{0}** has coded for **{1}** this {2} \nMost used language: {3}".format(user.nick, time, r, lang))
 
     # Overridden method
     # Called when bot successfully logs onto server
@@ -120,6 +120,9 @@ load_dotenv('secrets.env')
 API_TOKEN = os.getenv('DISCORD_TOKEN')
 
 DbModel.init_tables()
+
+intents = discord.Intents.default()
+intents.members = True
 
 client = WakaBot()
 client.run(API_TOKEN)
