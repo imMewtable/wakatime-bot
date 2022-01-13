@@ -64,6 +64,11 @@ class WakaBot(commands.Bot):
                 print("{0} is not an acceptable time range, command failed.".format(r))
                 await ctx.message.reply("Sorry, I dont recognize **{0}** as a valid time range. Try `week`, `month`, or `alltime`!".format(r))
                 return
+
+            # Check user is registered and in database
+            if not (DbModel.is_user_authenticated(user, ctx.guild.id)):
+                await ctx.message.reply("Sorry, I can't find {0} in my database. If they have a Wakatime account, they can use the command: `!register` to start that process.".format(user.nick))
+                return
         
             stats = self.authenticator.get_wakatime_user_json(user, ctx.guild.id, range)
             
