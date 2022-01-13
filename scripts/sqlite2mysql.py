@@ -19,7 +19,7 @@ mysql_db = MySQLDatabase(
 )
 
 
-class MySQLBaseModel(Model):
+class BaseModel(Model):
     """A base model that will use our Sqlite database."""
 
     class Meta:
@@ -27,12 +27,12 @@ class MySQLBaseModel(Model):
         primary_key = CompositeKey('discord_username', 'server_id')
 
 
-class WakaData(MySQLBaseModel):
-    discord_username = UUIDField(null=False)
-    wakatime_username = TextField(null=True)
-    auth_token = TextField(null=True)
-    refresh_token = TextField(null=True)
-    server_id = IntegerField(null=False)
+class WakaData(BaseModel):
+    discord_username = CharField(null=False, max_length=40)
+    wakatime_username = CharField(null=True, max_length=40)
+    auth_token = CharField(null=True, max_length=100)
+    refresh_token = CharField(null=True, max_length=100)
+    server_id = BigIntegerField(null=False)
 
 
 mysql_db.connect()

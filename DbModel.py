@@ -31,7 +31,7 @@ class WakaData(BaseModel):
     wakatime_username = CharField(null=True, max_length=40)
     auth_token = CharField(null=True, max_length=100)
     refresh_token = CharField(null=True, max_length=100)
-    server_id = IntegerField(null=False)
+    server_id = BigIntegerField(null=False)
 
 
 # Self explanatory
