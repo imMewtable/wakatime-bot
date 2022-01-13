@@ -3,3 +3,4 @@ peewee==3.14.8
 python-dotenv==0.19.2
 rauth==0.7.3
 requests==2.26.0
+pymysql==1.0.2
