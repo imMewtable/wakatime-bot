@@ -46,9 +46,9 @@ class WakaBot(commands.Bot):
         @self.command(name='stats')
         async def stats(ctx, r, user: discord.Member):
             """
-            Prints out the stats of the user that sends the command
-            args[0]: range (week, month, year, alltime)
-            args[1]: username (OPTIONAL)
+            Prints out individual coding stats for a user
+            range: range (week, month, alltime)
+            user: user whose stats to print
             """
             # Time range of stats to be printed
             if r == 'week' or r =='weekly': # there is no keyword to get the actual current week
@@ -64,8 +64,7 @@ class WakaBot(commands.Bot):
                 print("{0} is not an acceptable time range, command failed.".format(r))
                 await ctx.message.reply("Sorry, I dont recognize **{0}** as a valid time range. Try `week`, `month`, or `alltime`!".format(r))
                 return
-
-
+        
             stats = self.authenticator.get_wakatime_user_json(user, ctx.guild.id, range)
             
             # Top language is not included in alltime stats. Different json formats too
