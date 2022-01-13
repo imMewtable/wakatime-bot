@@ -104,6 +104,11 @@ def is_user_initialized_not_authenticated(discord_username, server_id):
     return get_user_access_token(discord_username, server_id) is None
 
 
+# Checks to see if a user has been fully authenticated (aka, exists in DB with access token
+def is_user_authenticated(discord_username, server_id):
+    return get_user_access_token(discord_username, server_id) is not None
+
+
 # Get's the discord user in server ID's access token
 def get_user_access_token(discord_user, server_id):
     try:
