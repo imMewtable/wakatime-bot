@@ -12,7 +12,7 @@ import data_parser
 
 class WakaBot(commands.Bot):
     def __init__(self):
-        super().__init__(command_prefix='!')
+        super().__init__(command_prefix='!', intents=intents)
         self.authenticator = auth.Authorizer()
 
         # Command to register user
@@ -37,31 +37,55 @@ class WakaBot(commands.Bot):
             else:
                 await cmd_author.send('You either already requested to be initialized or you are already authenticated')
 
-        # Command to print the top 5 users of all time
-        @self.command(name='alltime')
-        async def waka_leaderboard_alltime(ctx):
+        # HANDLES ALL LEADERBOARDS ARGS
+        @self.command(name='top')
+        async def leaderboard(ctx):
             pass
-
-        # Command to print the top 5 users of the week
-        #@self.command(name='weekly')
-        #async def waka_leaderboard_weekly(ctx):
-        #    pass
-
-        @self.command(name='weekly')
-        async def self_weekly(ctx):
+        
+        # HANDLES ALL INDIVIDUAL STAT ARGS
+        @self.command(name='stats')
+        async def stats(ctx, r, user: discord.Member):
             """
-            Prints out the stats of the user that sends the command (no args)
+            Prints out the stats of the user that sends the command
+            args[0]: range (week, month, year, alltime)
+            args[1]: username (OPTIONAL)
             """
-            stats = self.authenticator.get_wakatime_user_json(ctx.author, ctx.guild.id, constant.WEEK)
-
-            time = stats['cummulative_total']['text']
-            lang = data_parser.most_used_language(stats)
-
-            # print results
-            if time == "0 secs":
-                 await ctx.message.reply("Sorry, you don't have any data logged yet! Spend some time coding and try again.")
+            # Time range of stats to be printed
+            if r == 'week' or r =='weekly': # there is no keyword to get the actual current week
+                range = constant.WEEK                   # i will have to make a method in future to calc the most recent
+                r = "week"                              # sunday and then i will put a custome range here. last 7 from today
+                                                        # is stinky and no good 
+            elif r == 'month' or r == 'monthly':
+                range = constant.MONTH
+                r = "month"
+            elif r == 'alltime':
+                range = constant.ALL_TIME
             else:
-                await ctx.message.reply("Time: {0} \nMost used language: {1}".format(time, lang))
+                print("{0} is not an acceptable time range, command failed.".format(r))
+                await ctx.message.reply("Sorry, I dont recognize **{0}** as a valid time range. Try `week`, `month`, or `alltime`!".format(r))
+                return
+
+
+            stats = self.authenticator.get_wakatime_user_json(user, ctx.guild.id, range)
+            
+            # Top language is not included in alltime stats. Different json formats too
+            if range == constant.ALL_TIME:
+                start = stats['data']['range']['start_text']
+                start = start[4:] # Cut off the weekday, I dont like it there
+                time = stats['data']['text']
+                lang = 'None'
+            else:
+                time = stats['cummulative_total']['text']
+                lang = data_parser.most_used_language(stats)
+
+            # Print results
+            if time == "0 secs":
+                # Should specify the time range? Not sure.
+                 await ctx.message.reply("Sorry, you don't have any data logged yet! Spend some time coding and try again.")
+            elif lang == "None":
+                await ctx.message.reply("**{0}** has coded for **{1}** since **{2}**".format(user.nick, time, start))
+            else:
+                await ctx.message.reply("**{0}** has coded for **{1}** this {2} \nMost used language: {3}".format(user.nick, time, r, lang))
 
     # Overridden method
     # Called when bot successfully logs onto server
@@ -102,6 +126,9 @@ load_dotenv('secrets.env')
 API_TOKEN = os.getenv('DISCORD_TOKEN')
 
 DbModel.init_tables()
+
+intents = discord.Intents.default()
+intents.members = True
 
 client = WakaBot()
 client.run(API_TOKEN)
