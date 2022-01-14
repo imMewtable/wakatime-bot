@@ -32,11 +32,11 @@ def default_time():
 
 # Class that describes how Wakabot will act on a per-server basis
 class ServerConfig(BaseModel):
-    server_id = BigIntegerField(primary_key=True)                                   # Discord's server id
-    display_weekly = BooleanField(null=False, default=False)                        # Automatically display user scoreboard weekly
-    display_monthly = BooleanField(null=False, default=False)                       # Automatically display user scoreboard monthly
-    user_scoreboard_count = IntegerField(null=False, default=5)                     # Max number of users to display on any given scoreboard
-    auto_scoreboard_display = TimeField(null=False, default=default_time) # When to display the scoreboard (UTC) (defaults to 00:00:00 UTC or 7PM EST)
+    server_id = BigIntegerField(primary_key=True)                           # Discord's server id
+    display_weekly = BooleanField(null=False, default=False)                # Automatically display user scoreboard weekly
+    display_monthly = BooleanField(null=False, default=False)               # Automatically display user scoreboard monthly
+    user_scoreboard_count = IntegerField(null=False, default=5)             # Max number of users to display on any given scoreboard
+    auto_scoreboard_display = TimeField(null=False, default=default_time)   # When to display the scoreboard (UTC) (defaults to 00:00:00 UTC or 7PM EST)
 
 
 # Class that describes a user that wakabot keeps track of
