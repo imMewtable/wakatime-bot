@@ -39,15 +39,46 @@ class WakaBot(commands.Bot):
 
         # HANDLES ALL LEADERBOARDS ARGS
         @self.command(name='top')
-        async def leaderboard(ctx):
-            pass
+        async def leaderboard(ctx, *args):
+            """
+            Prints a leaderboard for server stats 
+            args[0]: range (week, month, alltime)
+            args[1]: amount of people to print? 
+            """
+            # Validate args
+            if len(args) == 1:
+                n = 5
+            else:
+                n = args[1]
+
+            r = args[0]
+          
+            if r == 'week' or r =='weekly':
+                range = constant.WEEK        
+                r = "week"                              
+            elif r == 'month' or r == 'monthly':
+                range = constant.MONTH
+                r = "month"
+            elif r == 'alltime':
+                range = constant.ALL_TIME
+            else:
+                print("{0} is not an acceptable time range, command failed.".format(r))
+                await ctx.message.reply("Sorry, I dont recognize **{0}** as a valid time range. Try `week`, `month`, or `alltime`!".format(r))
+                return
+
+            people = data_parser.rank_all_users(self, ctx.guild.id, range)
+
+            board = data_parser.format_leaderboard(people, n, ctx.guild.name)
+            
+            await ctx.message.reply(board)
+            
         
         # HANDLES ALL INDIVIDUAL STAT ARGS
         @self.command(name='stats')
         async def stats(ctx, r, user: discord.Member):
             """
             Prints out individual coding stats for a user
-            range: range (week, month, alltime)
+            r: range (week, month, alltime)
             user: user whose stats to print
             """
             # Time range of stats to be printed
