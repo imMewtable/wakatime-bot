@@ -24,7 +24,7 @@ def most_used_language(stats):
         return "No data"
 
 
-def rank_all_users(self, guild_ID, r):
+def rank_all_users(self, ctx, r):
     """
     Returns a sorted list of dictionaries that contain
     every authenticated user in the server
@@ -32,11 +32,11 @@ def rank_all_users(self, guild_ID, r):
 
     people = []
 
-    authUsers = DbModel.get_authenticated_discord_users(guild_ID)
+    authUsers = DbModel.get_authenticated_discord_users(ctx.guild.id)
 
     # Collect data from json into my list of dicts
     for username in authUsers:
-        stats = self.authenticator.get_wakatime_user_json(username, guild_ID, r)
+        stats = self.authenticator.get_wakatime_user_json(username, ctx.guild.id, r)
 
         if r == constant.ALL_TIME:
             textTime = stats['data']['text']
@@ -44,9 +44,11 @@ def rank_all_users(self, guild_ID, r):
         else: 
             textTime = stats['cummulative_total']['text']
             rawTime = stats['cummulative_total']['seconds']
-                
+        
+        member = ctx.guild.get_member_named(username)
+    
         userDict = {}
-        userDict['name'] = username.display_name
+        userDict['name'] = member.display_name
         userDict['seconds'] = rawTime
         userDict['time'] = textTime
 
