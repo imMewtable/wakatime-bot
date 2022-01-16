@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import sys
+import time
 
 import requests
 from rauth import OAuth2Service
@@ -95,6 +96,7 @@ class Authorizer:
     # Returns as json if found, returns None if not found or authentication failed
     # Time range is REQUIRED and must either be nothing, 'last_7_days', 'last_30_days', 'last_6_months', or 'last_year'
     def get_wakatime_user_json(self, discord_username, server_id, time_range):
+        ping = time.perf_counter()
         old_refresh_token = DbModel.get_user_refresh_token(discord_username, server_id)
 
         # Refresh token prior to accessing API so its always up to date
@@ -115,6 +117,8 @@ class Authorizer:
         # Use get request using authorization header
         response = requests.get(self.base_url + url_args, headers=headers)
         if response.status_code == 200:
+            pong = time.perf_counter()
+            print(f"Got a response for {discord_username} in {pong - ping:0.4f} seconds")
             return response.json()
 
         return None
