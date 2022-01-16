@@ -36,7 +36,7 @@ class WakaData(BaseModel):
 
 # Self explanatory
 def init_tables():
-    db.connect()
+    db.connect(reuse_if_open=True)
     db.create_tables([WakaData])
     db.close()
 
@@ -45,7 +45,7 @@ def init_tables():
 # requested to be initialized.
 def initialize_user_data(discord_user, serverid):
     try:
-        db.connect()
+        db.connect(reuse_if_open=True)
         code = WakaData.create(discord_username=discord_user, server_id=serverid)
         db.close()
         return code
@@ -57,7 +57,7 @@ def initialize_user_data(discord_user, serverid):
 
 # Used when user is authenticated. Updates dicord_username entry where the auth token is null
 def update_user_data(discord_user, wakatime_username, auth_token, refresh_token):
-    db.connect()
+    db.connect(reuse_if_open=True)
 
     data = WakaData.get((WakaData.discord_username == discord_user) & (WakaData.auth_token >> None))
     data.wakatime_username = wakatime_username
@@ -71,7 +71,7 @@ def update_user_data(discord_user, wakatime_username, auth_token, refresh_token)
 
 # Updates discord username with server ids tokens
 def update_user_tokens(discord_username, server_id, new_auth_token, new_refresh_token):
-    db.connect()
+    db.connect(reuse_if_open=True)
 
     data = WakaData.get((WakaData.discord_username == discord_username) & (WakaData.server_id == server_id))
     data.auth_token = new_auth_token
@@ -85,7 +85,7 @@ def update_user_tokens(discord_username, server_id, new_auth_token, new_refresh_
 # Returns the WakaData object associated with the discord username and server id
 def get_discord_user_data(discord_user, serverid):
     try:
-        db.connect()
+        db.connect(reuse_if_open=True)
 
         data = WakaData.select().where((WakaData.discord_username == discord_user) & (WakaData.server_id == serverid))
         user = data[0]
@@ -112,7 +112,7 @@ def is_user_authenticated(discord_username, server_id):
 # Get's the discord user in server ID's access token
 def get_user_access_token(discord_user, server_id):
     try:
-        db.connect()
+        db.connect(reuse_if_open=True)
 
         data = WakaData.select().where((WakaData.discord_username == discord_user) & (WakaData.server_id == server_id))
         access_token = data[0].auth_token
@@ -128,7 +128,7 @@ def get_user_access_token(discord_user, server_id):
 # Gets the discord user in server id's refresh token
 def get_user_refresh_token(discord_username, server_id):
     try:
-        db.connect()
+        db.connect(reuse_if_open=True)
 
         data = WakaData.select().where((WakaData.discord_username == discord_username) &
                                        (WakaData.server_id == server_id))
@@ -145,11 +145,19 @@ def get_user_refresh_token(discord_username, server_id):
 # Gets all discord users who are currently authenticated
 def get_authenticated_discord_users(server_id):
     try:
-        db.connect()
+        # Get data from database
+        db.connect(reuse_if_open=True)
         data = WakaData.select(WakaData.discord_username).where((WakaData.server_id == server_id) &  # ServerID is equal
                                                                 (~WakaData.auth_token >> None))  # auth_token is not None
+
         db.close()
-        return data
+
+        # Put results into string list
+        result = []
+        for user in data:
+            result.append(user.discord_username)
+
+        return result
     except Exception as e:
         print(e)
         db.close()
@@ -157,7 +165,7 @@ def get_authenticated_discord_users(server_id):
 
 
 def __debug_log_all_data__():
-    db.connect()
+    db.connect(reuse_if_open=True)
 
     rows = WakaData.select()
     for row in rows:
@@ -167,7 +175,7 @@ def __debug_log_all_data__():
 
 
 def get_user_with_no_access_token(discord_username):
-    db.connect()
+    db.connect(reuse_if_open=True)
     data = WakaData.select().where((WakaData.discord_username == discord_username) & (WakaData.auth_token >> None)).get()
     db.close()
     return data
