@@ -55,7 +55,7 @@ def rank_all_users(self, ctx, r):
         people.append(userDict)
             
     # Sort the list
-    people = sorted(people, key=lambda x: x['seconds'])
+    people = sorted(people, key=lambda x: x['seconds'], reverse=True)
 
     return people
 
