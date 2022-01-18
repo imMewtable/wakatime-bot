@@ -142,8 +142,14 @@ def get_user_refresh_token(discord_username, server_id):
         return None
 
 
-# Gets all discord users who are currently authenticated
 def get_authenticated_discord_users(server_id, as_is=False):
+    """
+    Gets all the discord users who are currently authenticated under server_id
+
+    :param server_id: The ID of the server
+    :param as_is: OPTIONAL parameter. Defines if the user data should be returned as objects or as just strings.
+    :return: Either list of string of discord usernames or a list of WakaData objects (depending on as_is)
+    """
     try:
         # Get data from database
         db.connect(reuse_if_open=True)
