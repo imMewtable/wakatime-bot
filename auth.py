@@ -250,6 +250,6 @@ class Authorizer:
             return discord_username, data
 
 
-auth = Authorizer()
-asyncio.run(auth.async_get_all_wakatime_users_json(892121935658504232, 'last_7_days'))
+#auth = Authorizer()
+#asyncio.run(auth.async_get_all_wakatime_users_json(892121935658504232, 'last_7_days'))
 
