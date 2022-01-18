@@ -1,15 +1,18 @@
+import asyncio
 import hashlib
 import json
 import os
 import sys
 import time
 
+import aiohttp
 import requests
 from rauth import OAuth2Service
 from rauth import *
 from dotenv import load_dotenv
 from urllib.parse import parse_qsl
 import DbModel
+
 
 class Authorizer:
     def __init__(self):
@@ -62,7 +65,7 @@ class Authorizer:
     # Refreshes a user's database tokens by making call to wakatime token API and updating DB
     def refresh_tokens(self, discord_username, server_id, old_refresh_token):
         headers = {'Accept': 'application/x-www-form-urlencoded'}
-        data = {'grant_type' : 'refresh_token',
+        data = {'grant_type': 'refresh_token',
                 'refresh_token': old_refresh_token}
         response = self.__parse_raw_response__(self.service.get_raw_access_token(headers=headers, data=data).text)
         new_refresh_token = response['refresh_token']
@@ -87,7 +90,8 @@ class Authorizer:
             username = user_data['username']
 
             # Make sure table data gets updated
-            if DbModel.update_user_data(discord_username, username, token_response['access_token'], token_response['refresh_token']) == 1:
+            if DbModel.update_user_data(discord_username, username, token_response['access_token'],
+                                        token_response['refresh_token']) == 1:
                 return True
 
         return False
@@ -122,3 +126,48 @@ class Authorizer:
             return response.json()
 
         return None
+
+    async def __refresh_all_server_tokens__(self, server_id):
+        async with aiohttp.ClientSession() as token_session:
+            tasks = []
+            headers = {'Accept': 'application/x-www-form-urlencoded'}
+
+            users = DbModel.get_authenticated_discord_users(server_id, as_is=True)
+            load_dotenv('secrets.env')
+            app_id = os.getenv('WAKA_APP_ID')
+            app_secret = os.getenv('WAKA_APP_SECRET')
+
+            for user in users:
+                data = {'client_id': app_id,
+                        'client_secret': app_secret,
+                        'redirect_uri': self.redirect_uri,
+                        'grant_type': 'refresh_token',
+                        'refresh_token': user.refresh_token}
+                tasks.append(asyncio.ensure_future(self.__refresh_single_token__(headers, data,
+                                                                                 user.refresh_token, token_session)))
+
+            token_responses = await asyncio.gather(*tasks)
+            for response in token_responses:
+                http_response = response[0]  # Actual token response
+                old_refresh_token = response[1]  # Old refresh token
+
+                DbModel.update_tokens_from_old_refresh_token(old_refresh_token,
+                                                             http_response['refresh_token'],
+                                                             http_response['access_token'])
+
+    async def __refresh_single_token__(self, header, body, old_refresh_token, session):
+        async with session.post(url='https://wakatime.com/oauth/token', data=body, headers=header) as response:
+            token_response = self.__parse_raw_response__(await response.text())
+            return token_response, old_refresh_token
+
+    async def async_get_wakatime_users_json(self, server_id, time_range):
+        asyncio.run(self.__refresh_all_server_tokens__(server_id))
+        return asyncio.run(self.__async_get_wakatime_users_json__(server_id, time_range))
+
+    async def __async_get_wakatime_users_json__(self, server_id, time_range):
+        async with aiohttp.ClientSession() as session:
+            pass
+
+
+auth = Authorizer()
+asyncio.run(auth.__refresh_all_server_tokens__(892121935658504232))
