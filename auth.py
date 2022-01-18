@@ -251,5 +251,8 @@ class Authorizer:
 
 
 #auth = Authorizer()
-#asyncio.run(auth.async_get_all_wakatime_users_json(892121935658504232, 'last_7_days'))
+#all_user_data = asyncio.run(auth.async_get_all_wakatime_users_json(892121935658504232, 'last_7_days'))
 
+#for user_data in all_user_data:
+#    print('USERNAME:\n' + user_data[0])
+#    print(user_data[1])

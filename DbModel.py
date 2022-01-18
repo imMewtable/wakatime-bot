@@ -193,7 +193,7 @@ def get_user_with_no_access_token(discord_username):
 
 def update_tokens_from_old_refresh_token(old_refresh_token, new_refresh_token, access_token):
     db.connect(reuse_if_open=True)
-    query = WakaData.update(refresh_token=new_refresh_token, auth_token=new_refresh_token)\
+    query = WakaData.update(refresh_token=new_refresh_token, auth_token=access_token)\
                     .where(WakaData.refresh_token == old_refresh_token)
     code = query.execute()
     #db.close() For some reason this line slows token refreshing by like 31%
