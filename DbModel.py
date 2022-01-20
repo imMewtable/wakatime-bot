@@ -142,15 +142,25 @@ def get_user_refresh_token(discord_username, server_id):
         return None
 
 
-# Gets all discord users who are currently authenticated
-def get_authenticated_discord_users(server_id):
+def get_authenticated_discord_users(server_id, as_is=False):
+    """
+    Gets all the discord users who are currently authenticated under server_id
+
+    :param server_id: The ID of the server
+    :param as_is: OPTIONAL parameter. Defines if the user data should be returned as objects or as just strings.
+    :return: Either list of string of discord usernames or a list of WakaData objects (depending on as_is)
+    """
     try:
         # Get data from database
         db.connect(reuse_if_open=True)
-        data = WakaData.select(WakaData.discord_username).where((WakaData.server_id == server_id) &  # ServerID is equal
-                                                                (~WakaData.auth_token >> None))  # auth_token is not None
+        data = WakaData.select().where((WakaData.server_id == server_id) &  # ServerID is equal
+                                       (~WakaData.auth_token >> None))  # auth_token is not None
 
         db.close()
+
+        # If we dont pass in as_is, return the data as is
+        if as_is:
+            return data
 
         # Put results into string list
         result = []
@@ -179,6 +189,15 @@ def get_user_with_no_access_token(discord_username):
     data = WakaData.select().where((WakaData.discord_username == discord_username) & (WakaData.auth_token >> None)).get()
     db.close()
     return data
+
+
+def update_tokens_from_old_refresh_token(old_refresh_token, new_refresh_token, access_token):
+    db.connect(reuse_if_open=True)
+    query = WakaData.update(refresh_token=new_refresh_token, auth_token=access_token)\
+                    .where(WakaData.refresh_token == old_refresh_token)
+    code = query.execute()
+    #db.close() For some reason this line slows token refreshing by like 31%
+    return code
 
 #init_tables()
 #__debug_log_all_data__()
