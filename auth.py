@@ -138,9 +138,7 @@ class Authorizer:
             tasks = []
             headers = {'Accept': 'application/x-www-form-urlencoded'}
 
-            sqlping = time.perf_counter()
             users = DbModel.get_authenticated_discord_users(server_id, as_is=True)
-            print(f"SQL data retrieval for user data took {time.perf_counter() - sqlping:0.4f} seconds")
 
             for user in users:
                 # Generate body data
@@ -154,11 +152,8 @@ class Authorizer:
                 tasks.append(asyncio.ensure_future(self.__refresh_single_token__(headers, data,
                                                                                  user.refresh_token, token_session)))
 
-            ping = time.perf_counter()
             # This actually executes all the async tasks
             token_responses = await asyncio.gather(*tasks)
-            print(f"Calling token API took {time.perf_counter() - ping:0.4f} seconds")
-            sqlping2 = time.perf_counter()
             for response in token_responses:
                 http_response = response[0]  # Actual token response
                 old_refresh_token = response[1]  # Old refresh token
@@ -167,8 +162,6 @@ class Authorizer:
                 DbModel.update_tokens_from_old_refresh_token(old_refresh_token,
                                                              http_response['refresh_token'],
                                                              http_response['access_token'])
-
-            print(f"SQL token refreshing took {time.perf_counter() - sqlping2:0.4f} seconds")
 
     async def __refresh_single_token__(self, header, body, old_refresh_token, session):
         """
@@ -195,11 +188,8 @@ class Authorizer:
         :param time_range: The time range to retrieve. Must be nothing, 'last_7_days', 'last_30_days', 'last_6_months', or 'last_year'
         :return: the json data of each wakatime user under the server_id
         """
-        ping = time.perf_counter()
         await self.__refresh_all_server_tokens__(server_id)
-        data = await self.__async_get_wakatime_users_json__(server_id, time_range)
-        print(f"Overall the async data retrieval and token refreshing took {time.perf_counter() - ping:0.4f} seconds")
-        return data
+        return await self.__async_get_wakatime_users_json__(server_id, time_range)
 
     async def __async_get_wakatime_users_json__(self, server_id, time_range):
         """
@@ -211,9 +201,7 @@ class Authorizer:
         """
         async with aiohttp.ClientSession() as session:
             tasks = []
-            sqlping = time.perf_counter()
             users = DbModel.get_authenticated_discord_users(server_id, as_is=True)
-            print(f"2nd SQL data retrieval for user data took {time.perf_counter() - sqlping:0.4f} seconds")
             for user in users:
                 # Generate authentication header
                 header = {'Accept': 'application/x-www-form-urlencoded',
@@ -224,9 +212,7 @@ class Authorizer:
                                                                                                time_range,
                                                                                                user.discord_username)))
             # Execute all queued up tasks
-            ping = time.perf_counter()
             data_responses = await asyncio.gather(*tasks)
-            print(f"Async data retrieval took {time.perf_counter() - ping:0.4f} seconds")
             return data_responses
 
     async def __retrieve_single_wakatime_user_json__(self, header, session, time_range, discord_username):
