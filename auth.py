@@ -134,7 +134,7 @@ class Authorizer:
         :param server_id: the id of the server whose tokens to refresh
         :return: Nothing
         """
-        async with aiohttp.ClientSession() as token_session:
+        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as token_session:
             tasks = []
             headers = {'Accept': 'application/x-www-form-urlencoded'}
 
@@ -199,7 +199,7 @@ class Authorizer:
         :param time_range: The time range to retrieve. Must be nothing, 'last_7_days', 'last_30_days', 'last_6_months', or 'last_year'
         :return: A list of tuples. 0 index contains the discord username, 1 index contains the json data
         """
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
             tasks = []
             users = DbModel.get_authenticated_discord_users(server_id, as_is=True)
             for user in users:
