@@ -3,6 +3,7 @@ import os
 import aiohttp
 import requests
 import time
+import hashlib
 
 from rauth import OAuth2Service
 from rauth import *
@@ -16,7 +17,7 @@ class Authorizer:
         self.APP_ID = os.getenv('WAKA_APP_ID')
         self.APP_SECRET = os.getenv('WAKA_APP_SECRET')
 
-        self.redirect_uri = 'https://wakatime.com/oauth/test'
+        self.redirect_uri = 'http://127.0.0.1:5000/authenticate'
 
         self.base_url = 'https://wakatime.com/api/v1/'
 
@@ -28,18 +29,34 @@ class Authorizer:
             access_token_url='https://wakatime.com/oauth/token',
             base_url='https://wakatime.com/api/v1/')
 
-    # Private messages user the link for the authorization token
-    def get_user_authorization_url(self):
+    def get_user_authorization_url(self, discord_username, server_id):
+        """
+        Generates an authorization URL for the user to begin the authentication process.
+        Also calls the initialization function for the user using the state generated for
+        the url.
+        :param discord_username: The user's discord username who will receive the URL
+        :param server_id: The server id that the user started to register with
+        :return: the URL as a string that the user will use to register with wakabot
+        """
+        state = hashlib.sha1(os.urandom(40)).hexdigest()
         params = {'scope': 'email,read_stats,read_logged_time',
                   'response_type': 'code',
-                  'redirect_uri': self.redirect_uri}
+                  'redirect_uri': self.redirect_uri,
+                  'state': state}
 
         url = self.service.get_authorize_url(**params)
+
+        DbModel.initialize_user_data(discord_username, server_id, state)
+
         return url
 
-    # Turns raw response object into dictionary for easy parsing
-    # Need to do this with token response as token response returns both a access token and refresh token
     def __parse_raw_response__(self, response_text):
+        """
+        Turns raw response object into dictionary for easy parsing
+        Need to do this with token response as token response returns both a access token and refresh token
+        :param response_text:
+        :return: the token response as a dictionary
+        """
         # keys and values are separated with & signs
         response_objects = response_text.split('&')
         parsed_response = {}
@@ -50,16 +67,14 @@ class Authorizer:
 
         return parsed_response
 
-    # Turns the first token given by the user into a refresh token and access token
-    def get_first_access_token(self, initial_token):
-        headers = {'Accept': 'application/x-www-form-urlencoded'}
-        data = {'code': initial_token,
-                'grant_type': 'authorization_code',
-                'redirect_uri': self.redirect_uri}
-        return self.__parse_raw_response__(self.service.get_raw_access_token(headers=headers, data=data).text)
-
-    # Refreshes a user's database tokens by making call to wakatime token API and updating DB
     def refresh_tokens(self, discord_username, server_id, old_refresh_token):
+        """
+        Refreshes a user's access token and refresh tokens
+        :param discord_username: The discord username to refresh
+        :param server_id: The server id to refresh
+        :param old_refresh_token: The old refresh token that will be used to refresh the existing tokens
+        :return: nothing
+        """
         headers = {'Accept': 'application/x-www-form-urlencoded'}
         data = {'grant_type': 'refresh_token',
                 'refresh_token': old_refresh_token}
@@ -67,30 +82,6 @@ class Authorizer:
         new_refresh_token = response['refresh_token']
         new_access_token = response['access_token']
         DbModel.update_user_tokens(discord_username, server_id, new_access_token, new_refresh_token)
-
-    # Attempts to verify authorization token passed into function from discord_username
-    def authorize_token(self, initial_token, discord_username, server_id):
-        # Gets token response as dict
-        # token_response['access_token'] gets access token
-        # token_response['refresh_token'] gets refresh token
-        token_response = self.get_first_access_token(initial_token)
-
-        # Use authorization header
-        headers = {'Accept': 'application/x-www-form-urlencoded',
-                   'Authorization': 'Bearer {}'.format(token_response['access_token'])}
-
-        response = requests.get(self.base_url + 'users/current', headers=headers)
-        # Means the token given was valid
-        if response.status_code == 200:
-            user_data = response.json()['data']
-            username = user_data['username']
-
-            # Make sure table data gets updated
-            if DbModel.update_user_data(discord_username, username, token_response['access_token'],
-                                        token_response['refresh_token']) == 1:
-                return True
-
-        return False
 
     def get_wakatime_user_json(self, discord_username, server_id, time_range):
         """

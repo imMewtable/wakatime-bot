@@ -19,11 +19,9 @@ db = MySQLDatabase(
 
 
 class BaseModel(Model):
-    """A base model that will use our Sqlite database."""
-
+    """A base model that will use our MySQL database."""
     class Meta:
         database = db
-        primary_key = CompositeKey('discord_username', 'server_id')
 
 
 class WakaData(BaseModel):
@@ -33,40 +31,38 @@ class WakaData(BaseModel):
     refresh_token = CharField(null=True, max_length=100)
     server_id = BigIntegerField(null=False)
 
+    class Meta:
+        primary_key = CompositeKey('discord_username', 'server_id')
+
+
+class AuthenticationState(BaseModel):
+    discord_username = CharField(null=False, max_length=40)
+    server_id = BigIntegerField(null=False)
+    state = CharField(null=False, max_length=50)
+
+    class Meta:
+        primary_key = CompositeKey('discord_username', 'server_id')
+
 
 # Self explanatory
 def init_tables():
     db.connect(reuse_if_open=True)
-    db.create_tables([WakaData])
+    db.create_tables([WakaData, AuthenticationState])
     db.close()
 
 
 # Used when the register command is used. Initializes an entry in the db with the discord_user and serverid that
 # requested to be initialized.
-def initialize_user_data(discord_user, serverid):
+def initialize_user_data(discord_username, server_id, state):
     try:
         db.connect(reuse_if_open=True)
-        code = WakaData.create(discord_username=discord_user, server_id=serverid)
+        code = AuthenticationState.create(discord_username=discord_username, server_id=server_id, state=state)
         db.close()
         return code
     except Exception as e:
         print(e)
         db.close()
         return None
-
-
-# Used when user is authenticated. Updates dicord_username entry where the auth token is null
-def update_user_data(discord_user, wakatime_username, auth_token, refresh_token):
-    db.connect(reuse_if_open=True)
-
-    data = WakaData.get((WakaData.discord_username == discord_user) & (WakaData.auth_token >> None))
-    data.wakatime_username = wakatime_username
-    data.auth_token = auth_token
-    data.refresh_token = refresh_token
-
-    code = data.save()
-    db.close()
-    return code
 
 
 # Updates discord username with server ids tokens
