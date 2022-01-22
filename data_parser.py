@@ -1,5 +1,7 @@
 import DbModel
 import constant
+import asyncio
+import auth
 
 def most_used_language(stats):
     """
@@ -24,7 +26,7 @@ def most_used_language(stats):
         return "No data"
 
 
-def rank_all_users(self, ctx, r):
+async def rank_all_users(self, ctx, r):
     """
     Returns a sorted list of dictionaries that contain
     every authenticated user in the server
@@ -32,20 +34,18 @@ def rank_all_users(self, ctx, r):
 
     people = []
 
-    authUsers = DbModel.get_authenticated_discord_users(ctx.guild.id)
+    userData = await self.authenticator.async_get_all_wakatime_users_json(ctx.guild.id, r)
 
-    # Collect data from json into my list of dicts
-    for username in authUsers:
-        stats = self.authenticator.get_wakatime_user_json(username, ctx.guild.id, r)
-
+    # turn list of tuples into my list of dicts
+    for user in userData:
         if r == constant.ALL_TIME:
-            textTime = stats['data']['text']
-            rawTime = stats['data']['total_seconds']
+            textTime = user[1]['data']['text']
+            rawTime = user[1]['data']['total_seconds']
         else: 
-            textTime = stats['cummulative_total']['text']
-            rawTime = stats['cummulative_total']['seconds']
+            textTime = user[1]['cummulative_total']['text']
+            rawTime = user[1]['cummulative_total']['seconds']
         
-        member = ctx.guild.get_member_named(username)
+        member = ctx.guild.get_member_named(user[0])
     
         userDict = {}
         userDict['name'] = member.display_name

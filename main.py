@@ -66,7 +66,7 @@ class WakaBot(commands.Bot):
                 await ctx.message.reply("Sorry, I dont recognize **{0}** as a valid time range. Try `week`, `month`, or `alltime`!".format(r))
                 return
 
-            people = data_parser.rank_all_users(self, ctx, range)
+            people = await data_parser.rank_all_users(self, ctx, range)
 
             board = data_parser.format_leaderboard(people, n, ctx.guild.name)
             
