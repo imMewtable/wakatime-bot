@@ -17,7 +17,7 @@ class Authorizer:
         self.APP_ID = os.getenv('WAKA_APP_ID')
         self.APP_SECRET = os.getenv('WAKA_APP_SECRET')
 
-        self.redirect_uri = 'http://127.0.0.1:5000/authenticate'
+        self.redirect_uri = 'https://immewtable.com/authenticate'
 
         self.base_url = 'https://wakatime.com/api/v1/'
 
