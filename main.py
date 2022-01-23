@@ -23,16 +23,12 @@ class WakaBot(commands.Bot):
             # initialize_user_data returns the record that was successfully created
             # If it didn't work, it returns None. So if it's not None, it worked.
             # OR, we check if the user is initialized in the database but NOT authenticated (meaning auth_token is None)
-            if DbModel.initialize_user_data(str(cmd_author), server_id) or DbModel.is_user_initialized_not_authenticated(str(cmd_author), server_id):
-                url = self.authenticator.get_user_authorization_url()
-                await cmd_author.send("HERE ARE THE STEPS TO AUTHORIZE YOURSELF WITH THE WAKABOT:\n\n1). Visit the "
-                                      "URL at the bottom of this message.\n\n2). Allow Wakabot to be able to read "
-                                      "your user data\n\n**3.) Once you have authorized, Wakatime should give you an "
-                                      "initial access token (It will look like sec_###...). Copy that token as is, "
-                                      "paste it into THIS private "
-                                      "message, and send it to me.**\n\n4.) Once that is done, I should inform you "
-                                      "that you have successfully authenticated. You are ready to use Wakabot "
-                                      "commands on the server you have registered in.\n\n||{}||".format(url))
+            if not DbModel.is_user_authenticated(str(cmd_author), server_id):
+                # Get authorization url initializes the user's information in the auth state DB
+                url = self.authenticator.get_user_authorization_url(str(cmd_author), server_id)
+                await cmd_author.send("Please visit {0} in your browser and allow Wakabot to access your Wakatime "
+                                      "data. Once you've done that, you are ready to use Wakabot commands in the "
+                                      "server you are registered in!".format(url));
                 await ctx.message.reply("I sent you a DM to continue the registration process!")
             else:
                 await cmd_author.send('You either already requested to be initialized or you are already authenticated')
@@ -126,34 +122,6 @@ class WakaBot(commands.Bot):
     # Called when bot successfully logs onto server
     async def on_ready(self):
         print('We have logged in as {0.user}'.format(client))
-
-    # On message for DMs
-    async def on_message(self, message):
-        if message.author == client.user:
-            return
-
-        # on_message event fires for guild messages and DMs. So if we get an on_message we still need to process it
-        # as a potential command (aka, inherited process_commands function)
-        await client.process_commands(message)
-
-        # Basically checking if its a DM by seeing if the message has a guild
-        if not message.guild:
-            await message.reply('I have received your token. Please give me a moment while I authenticate you...')
-            msg_author = str(message.author)
-            token = str(message.content)
-            data = DbModel.get_user_with_no_access_token(msg_author)
-            # If the user is in the DB and the auth token hasn't been initialized
-            if data:
-                server = data.server_id
-                # Authenticates token
-                if self.authenticator.authorize_token(token, msg_author, server):
-                    await message.reply('Successfully authenticated! You are now ready to use Wakabot commands on the '
-                                        'server you registered in. Have a good day :)')
-                else:
-                    await message.reply('Failed to authenticate token. Was there a typo in the token?')
-            else:
-                await message.reply('Your information was not found in the database. Please use !register first to '
-                                    'initiate the authentication. Or you were already authenticated ;)')
 
 
 # Load secrets file and get token
