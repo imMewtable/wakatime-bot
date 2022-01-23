@@ -26,14 +26,9 @@ class WakaBot(commands.Bot):
             if not DbModel.is_user_authenticated(str(cmd_author), server_id):
                 # Get authorization url initializes the user's information in the auth state DB
                 url = self.authenticator.get_user_authorization_url(str(cmd_author), server_id)
-                await cmd_author.send("HERE ARE THE STEPS TO AUTHORIZE YOURSELF WITH THE WAKABOT:\n\n1). Visit the "
-                                      "URL at the bottom of this message.\n\n2). Allow Wakabot to be able to read "
-                                      "your user data\n\n**3.) Once you have authorized, Wakatime should give you an "
-                                      "initial access token (It will look like sec_###...). Copy that token as is, "
-                                      "paste it into THIS private "
-                                      "message, and send it to me.**\n\n4.) Once that is done, I should inform you "
-                                      "that you have successfully authenticated. You are ready to use Wakabot "
-                                      "commands on the server you have registered in.\n\n||{}||".format(url))
+                await cmd_author.send("Please visit {0} in your browser and allow Wakabot to access your Wakatime "
+                                      "data. Once you've done that, you are ready to use Wakabot commands in the "
+                                      "server you are registered in!".format(url));
                 await ctx.message.reply("I sent you a DM to continue the registration process!")
             else:
                 await cmd_author.send('You either already requested to be initialized or you are already authenticated')
