@@ -8,7 +8,7 @@ import auth
 import constant
 import json
 import data_parser
-import itertools
+
 
 
 class WakaBot(commands.Bot):
@@ -42,12 +42,28 @@ class WakaBot(commands.Bot):
             args[0]: range (week, month, alltime)
             args[1]: amount of people to print? 
             """
+            await ctx.channel.trigger_typing()
+            
+            # Did they forget the parameters?
+            if len(args) == 0:
+                print("No range was entered with !top. Command failed.")
+                await ctx.message.reply("Invalid command syntax, try: `!top <range>`")
+                return
+
             # Validate args
             if len(args) == 1:
                 n = 5
             else:
-                n = args[1]
-                print(n)
+                try:
+                    n = int(args[1])
+                except ValueError:
+                    # it was a string, not an int.
+                    print("A string was passed to !top for the amount of people to print. Command failed.")
+                    await ctx.message.reply("Sorry, I dont recognize **{0}** as a valid number.".format(args[1]))
+                    return
+
+                
+                
 
             r = args[0]
           
@@ -79,6 +95,10 @@ class WakaBot(commands.Bot):
             r: range (week, month, alltime)
             user: user whose stats to print
             """
+            await ctx.channel.trigger_typing()
+
+            #Did they type it wrong?
+
             # Time range of stats to be printed
             if r == 'week' or r =='weekly': # there is no keyword to get the actual current week
                 range = constant.WEEK                   # i will have to make a method in future to calc the most recent

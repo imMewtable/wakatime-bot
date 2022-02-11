@@ -64,7 +64,7 @@ def format_leaderboard(people, n, guild_name):
     count = 0
     leaderboard = "**Top {0} of {1}:**".format(n, guild_name)
 
-    for person in itertools.islice(people, int(n)):
+    for person in itertools.islice(people, n):
         count += 1
         row = "\n**[{0}]** {1} - *{2}*".format(count, person['name'], person['time'])
         leaderboard += row
