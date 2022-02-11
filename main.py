@@ -8,6 +8,7 @@ import auth
 import constant
 import json
 import data_parser
+import itertools
 
 
 class WakaBot(commands.Bot):
@@ -46,6 +47,7 @@ class WakaBot(commands.Bot):
                 n = 5
             else:
                 n = args[1]
+                print(n)
 
             r = args[0]
           
