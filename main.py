@@ -63,8 +63,6 @@ class WakaBot(commands.Bot):
                     return
 
                 
-                
-
             r = args[0]
           
             if r == 'week' or r =='weekly':
@@ -98,6 +96,7 @@ class WakaBot(commands.Bot):
             await ctx.channel.trigger_typing()
 
             #Did they type it wrong?
+            
 
             # Time range of stats to be printed
             if r == 'week' or r =='weekly': # there is no keyword to get the actual current week
@@ -120,6 +119,9 @@ class WakaBot(commands.Bot):
                 return
         
             stats = self.authenticator.get_wakatime_user_json(user, ctx.guild.id, range)
+            if stats is None or 'error' in stats:
+                await ctx.message.reply("Sorry, there was an error! Make sure you've installed the wakatime extension on your IDEs and are registered!")
+                return
             
             # Top language is not included in alltime stats. Different json formats too
             if range == constant.ALL_TIME:
@@ -128,7 +130,7 @@ class WakaBot(commands.Bot):
                 time = stats['data']['text']
                 lang = 'None'
             else:
-                time = stats['cummulative_total']['text']
+                time = stats['cumulative_total']['text']
                 lang = data_parser.most_used_language(stats)
 
             # Print results
@@ -139,6 +141,12 @@ class WakaBot(commands.Bot):
                 await ctx.message.reply("**{0}** has coded for **{1}** since **{2}**".format(user.nick, time, start))
             else:
                 await ctx.message.reply("**{0}** has coded for **{1}** this {2} \nMost used language: {3}".format(user.nick, time, r, lang))
+
+        # ME TRYING TO HANDLE THE ERROR OF NOT HAVING ENOUGH ARGS IN STATS
+        @stats.error
+        async def info_error(ctx, error):
+            if isinstance(error, commands.MissingRequiredArgument):
+                await ctx.message.reply('You didn\'t type enough parameters, try `!stats <range> <@user>`')
 
     # Overridden method
     # Called when bot successfully logs onto server

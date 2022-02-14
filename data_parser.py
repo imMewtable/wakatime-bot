@@ -39,6 +39,11 @@ async def rank_all_users(self, ctx, r):
 
     # turn list of tuples into my list of dicts
     for user in userData:
+        #make sure they dont have an error
+        if 'error' in user[1]:
+            print(f"User {user[0]} has an error in their json file reeeeeee")
+            continue
+            
         if r == constant.ALL_TIME:
             textTime = user[1]['data']['text']
             rawTime = user[1]['data']['total_seconds']
