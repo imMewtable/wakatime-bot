@@ -119,6 +119,7 @@ class WakaBot(commands.Bot):
                 return
         
             stats = self.authenticator.get_wakatime_user_json(user, ctx.guild.id, range)
+
             if stats is None or 'error' in stats:
                 await ctx.message.reply("Sorry, there was an error! Make sure you've installed the wakatime extension on your IDEs and are registered!")
                 return
@@ -130,7 +131,7 @@ class WakaBot(commands.Bot):
                 time = stats['data']['text']
                 lang = 'None'
             else:
-                time = stats['cumulative_total']['text']
+                time = stats['cummulative_total']['text']
                 lang = data_parser.most_used_language(stats)
 
             # Print results
@@ -145,6 +146,7 @@ class WakaBot(commands.Bot):
         # ME TRYING TO HANDLE THE ERROR OF NOT HAVING ENOUGH ARGS IN STATS
         @stats.error
         async def info_error(ctx, error):
+            print(f'=== COMMAND ERROR: {error} ===')
             if isinstance(error, commands.MissingRequiredArgument):
                 await ctx.message.reply('You didn\'t type enough parameters, try `!stats <range> <@user>`')
 
